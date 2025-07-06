@@ -1,6 +1,6 @@
 "use client"
 
-import { PieChart, Pie, Cell, Label } from "recharts"
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts"
 import {
   Card,
   CardHeader,
@@ -8,17 +8,12 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card"
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart"
 import { tableData } from "@/lib/table.data"
 
-// 1. Validasi tableData
+// Validasi data
 const safeTableData = Array.isArray(tableData) ? tableData : []
 
-// 2. Hitung distribusi platform
+// Hitung jumlah campaign per platform
 const platformCount: Record<string, number> = {}
 safeTableData.forEach((row) => {
   const platforms = row.platform?.split(",").map((p) => p.trim()) || []
@@ -29,13 +24,17 @@ safeTableData.forEach((row) => {
   })
 })
 
-// 3. Warna-warna untuk platform
 const colors = [
-  "#3B82F6", "#FD1D1D", "#F59E0B", "#8B5CF6", "#EF4444",
-  "#6366F1", "#F472B6", "#14B8A6"
+  "#facc15", // yellow-400
+  "#a78bfa", // purple-400
+  "#4ade80", // green-400
+  "#38bdf8", // sky-400
+  "#fb7185", // rose-400
+  "#f97316", // orange-400
 ]
 
-// 4. Konversi data menjadi array untuk chart
+
+// Data chart
 const chartData = Object.entries(platformCount).map(
   ([platform, campaigns], index) => ({
     platform,
@@ -44,7 +43,6 @@ const chartData = Object.entries(platformCount).map(
   })
 )
 
-// 5. Hitung total campaign
 const totalCampaigns = chartData.reduce((sum, entry) => sum + entry.campaigns, 0)
 
 export function ChartPlatformPie() {
@@ -68,61 +66,48 @@ export function ChartPlatformPie() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={{ campaigns: { label: "Campaigns", color: "#3B82F6" } }} className="mx-auto aspect-square max-h-[250px]">
-          <PieChart>
-            <ChartTooltip
-              cursor={false}
-              content={
-                <ChartTooltipContent
-                  hideLabel
-                  className="rounded-xl bg-gray-700 border-gray-600"
-                />
-              }
-            />
-            <Pie
-              className="cursor-pointer"
-              data={chartData}
-              dataKey="campaigns"
-              nameKey="platform"
-              innerRadius={60}
-              outerRadius={100}
-              strokeWidth={0}
-              paddingAngle={2}
-            >
-              {chartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.fill} />
-              ))}
-              <Label
-                content={({ viewBox }) => {
-                  if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+        {/* Chart + Total center */}
+        <div className="relative mx-auto max-w-xs aspect-square">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={chartData}
+                dataKey="campaigns"
+                nameKey="platform"
+                innerRadius={60}
+                outerRadius={100}
+                strokeWidth={0}
+                paddingAngle={2}
+              >
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.fill} />
+                ))}
+              </Pie>
+              <Tooltip
+                content={({ active, payload }) => {
+                  if (active && payload && payload.length) {
+                    const data = payload[0].payload
                     return (
-                      <text
-                        x={viewBox.cx}
-                        y={viewBox.cy}
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                      >
-                        <tspan className="fill-white text-3xl font-bold">
-                          {totalCampaigns}
-                        </tspan>
-                        <tspan
-                          y={(viewBox.cy || 0) + 24}
-                          x={viewBox.cx}
-                          className="fill-gray-400 text-sm"
-                        >
-                          Total Campaigns
-                        </tspan>
-                      </text>
+                      <div className="bg-white border shadow p-2 rounded text-xs">
+                        <div className="font-medium text-black">{data.platform}</div>
+                        <div className="text-gray-600">{data.campaigns}</div>
+                      </div>
                     )
                   }
+                  return null
                 }}
               />
-            </Pie>
-          </PieChart>
-        </ChartContainer>
+            </PieChart>
+          </ResponsiveContainer>
+
+          {/* Total center text */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+            <div className="text-4xl font-bold text-black">{totalCampaigns}</div>
+          </div>
+        </div>
 
         {/* Legend */}
-        <div className="mt-4 space-y-2">
+        <div className="mt-6 space-y-2">
           {chartData.map((item) => (
             <div
               key={item.platform}

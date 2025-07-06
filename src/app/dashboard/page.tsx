@@ -31,6 +31,10 @@ const statusLabels: Record<Status, string> = {
 export default function Dashboard() {
   const totalCampaigns = tableData.length
 
+  // Hitung per division
+  const marketingCount = tableData.filter((item) => item.division === "Marketing").length
+  const communityCount = tableData.filter((item) => item.division === "Community").length
+
   const normalizeStatus = (s: string) =>
     s.toLowerCase().replace(/\s/g, "-") as Status
 
@@ -69,7 +73,19 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-9xl font-bold text-gray-900">{totalCampaigns}</div>
-              <p className="text-xs text-green-400">+20.1% from last month</p>
+              <p className="text-xs text-green-400 mb-4">+20.1% from last month</p>
+
+              {/* Division Breakdown */}
+              <div className="flex justify-between text-sm text-gray-700">
+                <div className="flex flex-col items-start">
+                  <span className="font-semibold">Marketing</span>
+                  <span>{marketingCount} campaigns</span>
+                </div>
+                <div className="flex flex-col items-end">
+                  <span className="font-semibold">Community</span>
+                  <span>{communityCount} campaigns</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -84,7 +100,7 @@ export default function Dashboard() {
               return (
                 <Card
                   key={status}
-                  className="bg-white border-yellow-400 border-r-4 border-b-4"
+                  className="bg-white hover:shadow-md transition-shadow hover:shadow-yellow-400 border-yellow-400 border-r-4 border-b-4"
                 >
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-xl font-medium text-gray-900">

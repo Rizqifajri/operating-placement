@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -28,9 +28,11 @@ type FormData = z.infer<typeof formSchema>
 interface AddDataFormProps {
   onSubmit: (data: FormData) => void
   onClose?: () => void
+  initialData?: FormData | null
+  isEditing?: boolean
 }
 
-export default function AddDataForm({ onSubmit, onClose }: AddDataFormProps) {
+export default function AddDataForm({ onSubmit, onClose, initialData, isEditing = false }: AddDataFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const form = useForm<FormData>({
@@ -48,6 +50,13 @@ export default function AddDataForm({ onSubmit, onClose }: AddDataFormProps) {
       status: "",
     },
   })
+
+  // Set initial data if editing
+  useEffect(() => {
+    if (initialData) {
+      form.reset(initialData)
+    }
+  }, [initialData, form])
 
   async function handleSubmit(values: FormData) {
     setIsSubmitting(true)
@@ -68,60 +77,20 @@ export default function AddDataForm({ onSubmit, onClose }: AddDataFormProps) {
   }
 
   const formFields = [
-    {
-      name: "source" as const,
-      label: "Source",
-      options: ["Inbound", "Outbound"],
-      gridClass: "col-span-1",
-    },
-    {
-      name: "division" as const,
-      label: "Division",
-      options: ["Marketing", "Community"],
-      gridClass: "col-span-1",
-    },
-    {
-      name: "brand" as const,
-      label: "Brand",
-      type: "text",
-      gridClass: "col-span-1",
-    },
-    {
-      name: "category" as const,
-      label: "Category",
-      type: "text",
-      gridClass: "col-span-1",
-    },
+    { name: "source" as const, label: "Source", options: ["Inbound", "Outbound"], gridClass: "col-span-1" },
+    { name: "division" as const, label: "Division", options: ["Marketing", "Community"], gridClass: "col-span-1" },
+    { name: "brand" as const, label: "Brand", type: "text", gridClass: "col-span-1" },
+    { name: "category" as const, label: "Category", type: "text", gridClass: "col-span-1" },
     {
       name: "platform" as const,
       label: "Platform",
       options: ["Instagram", "TikTok", "Website", "YouTube", "Facebook", "Twitter"],
       gridClass: "col-span-1",
     },
-    {
-      name: "quarter" as const,
-      label: "Quarter",
-      options: ["Q1", "Q2", "Q3", "Q4"],
-      gridClass: "col-span-1",
-    },
-    {
-      name: "sow" as const,
-      label: "SOW",
-      type: "text",
-      gridClass: "col-span-full",
-    },
-    {
-      name: "content" as const,
-      label: "Content",
-      type: "textarea",
-      gridClass: "col-span-full",
-    },
-    {
-      name: "link" as const,
-      label: "Link",
-      type: "url",
-      gridClass: "col-span-full",
-    },
+    { name: "quarter" as const, label: "Quarter", options: ["Q1", "Q2", "Q3", "Q4"], gridClass: "col-span-1" },
+    { name: "sow" as const, label: "SOW", type: "text", gridClass: "col-span-full" },
+    { name: "content" as const, label: "Content", type: "textarea", gridClass: "col-span-full" },
+    { name: "link" as const, label: "Link", type: "url", gridClass: "col-span-full" },
     {
       name: "status" as const,
       label: "Status",
@@ -133,7 +102,6 @@ export default function AddDataForm({ onSubmit, onClose }: AddDataFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-        {/* Responsive Grid Layout */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto pr-2">
           {formFields.map((field) => (
             <FormField
@@ -178,10 +146,13 @@ export default function AddDataForm({ onSubmit, onClose }: AddDataFormProps) {
           ))}
         </div>
 
-        {/* Form Actions */}
         <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
-          <Button type="submit" className="flex-1 bg-purple-500 hover:bg-purple-600" disabled={isSubmitting}>
-            {isSubmitting ? "Adding..." : "Add Data"}
+          <Button
+            type="submit"
+            className="flex-1 bg-purple-500 hover:bg-purple-600"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (isEditing ? "Updating..." : "Adding...") : isEditing ? "Update Data" : "Add Data"}
           </Button>
           <Button
             type="button"

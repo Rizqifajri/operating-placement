@@ -356,7 +356,7 @@ export const TableContent = () => {
               </DropdownMenu>
 
               {/* Add Data Button */}
-              <Button onClick={handleAddNew} className="bg-purple-500 text-white hover:bg-purple-600">
+              <Button onClick={handleAddNew} className="bg-white text-black cursor-pointer hover:bg-white border border-purple-400 border-r-4 border-b-4">
                 <PlusIcon className="mr-2 h-4 w-4" />
                 Add Data
               </Button>

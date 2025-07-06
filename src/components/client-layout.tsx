@@ -9,13 +9,13 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
 
   useEffect(() => {
+    // Cek status login di localStorage setiap kali pathname berubah
     const loggedIn = localStorage.getItem("isLoggedIn") === "true"
     setIsLoggedIn(loggedIn)
-  }, [])
+  }, [pathname]) // Re-run setiap kali route berubah
 
-  // Sambil nunggu pengecekan localStorage
   if (isLoggedIn === null) {
-    return null // atau tampilkan loading spinner
+    return null // atau ganti dengan <LoadingSpinner /> jika kamu punya
   }
 
   const showHeader = isLoggedIn && pathname !== "/login"
