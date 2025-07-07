@@ -42,7 +42,7 @@ const chartConfig = {
 export function ChartQuarterBar() {
   return (
     <Card className="border-black border-r-4 border-b-4">
-      <CardTitle className="text-lg px-5 pt-5">Campaign by Quarter</CardTitle>
+      <CardTitle className="text-lg px-5 pt-5">Quarter</CardTitle>
       <ChartContainer config={chartConfig} className="min-h-[250px] w-full px-5 pb-5">
         <BarChart data={chartData}>
           <CartesianGrid vertical={false} />
