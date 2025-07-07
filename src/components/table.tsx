@@ -335,7 +335,7 @@ export const TableContent = () => {
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="outline"
-                    className="border-purple-200 text-purple-700 hover:bg-purple-50 bg-transparent"
+                    className="border-black text-black hover:bg-white bg-transparent"
                   >
                     <DownloadIcon className="mr-2 h-4 w-4" />
                     Export
@@ -356,7 +356,7 @@ export const TableContent = () => {
               </DropdownMenu>
 
               {/* Add Data Button */}
-              <Button onClick={handleAddNew} className="bg-white text-black cursor-pointer hover:bg-white border border-purple-400 border-r-4 border-b-4">
+              <Button onClick={handleAddNew} className="bg-white text-black cursor-pointer hover:bg-white border border-black border-r-4 border-b-4">
                 <PlusIcon className="mr-2 h-4 w-4" />
                 Add Data
               </Button>

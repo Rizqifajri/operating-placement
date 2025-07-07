@@ -149,7 +149,7 @@ export default function AddDataForm({ onSubmit, onClose, initialData, isEditing 
         <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
           <Button
             type="submit"
-            className="flex-1 bg-purple-500 hover:bg-purple-600"
+            className="flex-1 bg-white border-black hover:bg-white text-black border border-r-4 border-b-4"
             disabled={isSubmitting}
           >
             {isSubmitting ? (isEditing ? "Updating..." : "Adding...") : isEditing ? "Update Data" : "Add Data"}
