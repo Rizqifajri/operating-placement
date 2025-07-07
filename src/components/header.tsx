@@ -64,13 +64,6 @@ export const Header = () => {
           </nav>
         </div>
         <div className="flex items-center gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-900 w-4 h-4" />
-            <Input
-              placeholder="Search..."
-              className="pl-10 bg-white border text-white placeholder-gray-400 w-64"
-            />
-          </div>
 
           {/* Avatar + Dropdown Menu */}
           <DropdownMenu>

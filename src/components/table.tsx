@@ -21,6 +21,7 @@ import {
   DownloadIcon,
   FileTextIcon,
   FileSpreadsheetIcon,
+  Search,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -37,6 +38,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import AddDataForm from "./add-data-form"
 import * as XLSX from "xlsx"
+import { Input } from "./ui/input"
 
 // Define the data structure
 interface TableDataItem {
@@ -71,6 +73,8 @@ export const TableContent = () => {
   const [data, setData] = useState<TableDataItem[]>(tableData)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<TableDataItem | null>(null)
+  const [detailItem, setDetailItem] = useState<TableDataItem | null>(null)
+  const [searchText, setSearchText] = useState("")
   const [deleteItem, setDeleteItem] = useState<TableDataItem | null>(null)
 
   const maxData = 34
@@ -84,12 +88,18 @@ export const TableContent = () => {
   const [selectedQuarter, setSelectedQuarter] = useState("__all__")
   const [selectedSource, setSelectedSource] = useState("__all__")
 
-  const filteredData = displayData.filter((item) => {
-    const matchesYear = selectedYear === "__all__" || item.date?.startsWith(selectedYear)
-    const matchesQuarter = selectedQuarter === "__all__" || item.quarter === selectedQuarter
-    const matchesSource = selectedSource === "__all__" || item.source === selectedSource
-    return matchesYear && matchesQuarter && matchesSource
-  })
+ const filteredData = displayData.filter((item) => {
+  const matchesYear = selectedYear === "__all__" || item.date?.startsWith(selectedYear)
+  const matchesQuarter = selectedQuarter === "__all__" || item.quarter === selectedQuarter
+  const matchesSource = selectedSource === "__all__" || item.source === selectedSource
+
+  const matchesSearch = searchText === "" || Object.values(item).some((value) =>
+    typeof value === "string" && value.toLowerCase().includes(searchText.toLowerCase())
+  )
+
+  return matchesYear && matchesQuarter && matchesSource && matchesSearch
+})
+
 
   const itemsPerPage = 30
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
@@ -329,13 +339,24 @@ export const TableContent = () => {
               </Select>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 justify-center items-center">
+              <div className="relative flex gap-4 flex-wrap items-center">
+                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-900 w-4 h-4" />
+                <Input
+                  type="text"
+                  placeholder="Search keyword..."
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  className="w-full md:w-[300px]"
+                />
+              </div>
+
               {/* Export Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="outline"
-                    className="border-black text-black hover:bg-white bg-transparent"
+                    className="bg-white text-black cursor-pointer hover:bg-white border border-black border-r-4 border-b-4 hover:border"
                   >
                     <DownloadIcon className="mr-2 h-4 w-4" />
                     Export
@@ -356,7 +377,7 @@ export const TableContent = () => {
               </DropdownMenu>
 
               {/* Add Data Button */}
-              <Button onClick={handleAddNew} className="bg-white text-black cursor-pointer hover:bg-white border border-black border-r-4 border-b-4">
+              <Button onClick={handleAddNew} className="mr-5 bg-white text-black cursor-pointer hover:bg-white border border-black border-r-4 border-b-4 hover:border">
                 <PlusIcon className="mr-2 h-4 w-4" />
                 Add Data
               </Button>
@@ -438,6 +459,10 @@ export const TableContent = () => {
                         <DropdownMenuContent>
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => setDetailItem(row)} className="cursor-pointer">
+                            <FileTextIcon className="mr-2 h-4 w-4" />
+                            Detail
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleEdit(row)} className="cursor-pointer">
                             <EditIcon className="mr-2 h-4 w-4" />
                             Edit
@@ -517,8 +542,8 @@ export const TableContent = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-600 hover:bg-red-700">
+            <AlertDialogCancel className="bg-white text-black cursor-pointer hover:bg-white border border-black border-r-4 border-b-4 hover:border">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-white text-black cursor-pointer hover:bg-white border border-red-600 border-r-4 border-b-4 hover:border">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

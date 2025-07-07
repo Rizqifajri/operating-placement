@@ -58,7 +58,7 @@ export function ChartPlatformPie() {
   }
 
   return (
-    <Card className="bg-white border">
+    <Card className="bg-white border-black border-r-4 border-b-4">
       <CardHeader>
         <CardTitle>Platform Distribution</CardTitle>
         <CardDescription className="text-gray-900">
