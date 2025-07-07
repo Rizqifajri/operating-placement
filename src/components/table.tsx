@@ -39,6 +39,7 @@ import {
 import AddDataForm from "./add-data-form"
 import * as XLSX from "xlsx"
 import { Input } from "./ui/input"
+import { CardDetailModal } from "./card-details"
 
 // Define the data structure
 interface TableDataItem {
@@ -559,6 +560,9 @@ export const TableContent = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <CardDetailModal data={detailItem} onClose={() => setDetailItem(null)} />
+
     </div>
   )
 }
