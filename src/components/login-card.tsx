@@ -39,7 +39,7 @@ export function CardLogin() {
   }
 
   return (
-    <Card className="w-full max-w-sm bg-white text-black cursor-pointer hover:bg-white border border-fuchsia-500 border-r-4 border-b-4">
+    <Card className="w-full max-w-sm bg-white text-black cursor-pointer hover:bg-white border border-black border-r-4 border-b-4">
       <CardHeader>
         <CardTitle className="text-xl md:text-3xl">Login to your account</CardTitle>
         <CardDescription>
@@ -73,7 +73,7 @@ export function CardLogin() {
 
             <Button
               type="submit"
-              className="w-full bg-white text-black cursor-pointer hover:bg-white border border-fuchsia-500 border-r-4 border-b-4"
+              className="w-full bg-white hover:border text-black cursor-pointer hover:bg-white border border-black border-r-4 border-b-4"
               disabled={isLoading}
             >
               {isLoading ? (

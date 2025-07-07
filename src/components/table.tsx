@@ -59,13 +59,13 @@ interface TableDataItem {
 const getStatusBadge = (status: string) => {
   switch (status) {
     case "Published":
-      return <Badge className="bg-green-500/20 text-green-400 border-green-500/30">Published</Badge>
+      return <Badge className="bg-green-500/20 text-green-600 border-green-600">Published</Badge>
     case "On Going":
-      return <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">On Going</Badge>
+      return <Badge className="bg-yellow-500/20 text-yellow-600 border-yellow-600">On Going</Badge>
     case "Completed":
       return <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">Completed</Badge>
     default:
-      return <Badge className="bg-gray-500/20 text-gray-400 border-gray-500/30">{status}</Badge>
+      return <Badge className="bg-gray-500/20 text-gray-600 border-gray-600">{status}</Badge>
   }
 }
 
@@ -88,17 +88,17 @@ export const TableContent = () => {
   const [selectedQuarter, setSelectedQuarter] = useState("__all__")
   const [selectedSource, setSelectedSource] = useState("__all__")
 
- const filteredData = displayData.filter((item) => {
-  const matchesYear = selectedYear === "__all__" || item.date?.startsWith(selectedYear)
-  const matchesQuarter = selectedQuarter === "__all__" || item.quarter === selectedQuarter
-  const matchesSource = selectedSource === "__all__" || item.source === selectedSource
+  const filteredData = displayData.filter((item) => {
+    const matchesYear = selectedYear === "__all__" || item.date?.startsWith(selectedYear)
+    const matchesQuarter = selectedQuarter === "__all__" || item.quarter === selectedQuarter
+    const matchesSource = selectedSource === "__all__" || item.source === selectedSource
 
-  const matchesSearch = searchText === "" || Object.values(item).some((value) =>
-    typeof value === "string" && value.toLowerCase().includes(searchText.toLowerCase())
-  )
+    const matchesSearch = searchText === "" || Object.values(item).some((value) =>
+      typeof value === "string" && value.toLowerCase().includes(searchText.toLowerCase())
+    )
 
-  return matchesYear && matchesQuarter && matchesSource && matchesSearch
-})
+    return matchesYear && matchesQuarter && matchesSource && matchesSearch
+  })
 
 
   const itemsPerPage = 30
@@ -289,9 +289,9 @@ export const TableContent = () => {
       <Card className="bg-white w-full">
         <CardHeader>
           <CardTitle>Campaign Overview</CardTitle>
-          <CardDescription className="text-gray-900">
+          {/* <CardDescription className="text-gray-900">
             Recent campaign activities and status ({data.length} total entries)
-          </CardDescription>
+          </CardDescription> */}
         </CardHeader>
         <CardContent>
           <div className="flex gap-4 mb-4 items-center justify-between">
@@ -340,6 +340,7 @@ export const TableContent = () => {
             </div>
 
             <div className="flex gap-2 justify-center items-center">
+              {/* Search */}
               <div className="relative flex gap-4 flex-wrap items-center">
                 <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-900 w-4 h-4" />
                 <Input
@@ -351,37 +352,46 @@ export const TableContent = () => {
                 />
               </div>
 
-              {/* Export Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="bg-white text-black cursor-pointer hover:bg-white border border-black border-r-4 border-b-4 hover:border"
-                  >
-                    <DownloadIcon className="mr-2 h-4 w-4" />
-                    Export
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Export Options</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={exportToCSV} className="cursor-pointer">
-                    <FileTextIcon className="mr-2 h-4 w-4" />
-                    Export as CSV
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={exportToExcel} className="cursor-pointer">
-                    <FileSpreadsheetIcon className="mr-2 h-4 w-4" />
-                    Export as Excel
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {/* Export Dropdown dengan pembungkus tetap */}
+              <div className="inline-block w-[120px]">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full bg-white text-black cursor-pointer hover:bg-white border border-black border-r-4 border-b-4 hover:border transition-all duration-200"
+                    >
+                      <DownloadIcon className="mr-2 h-4 w-4" />
+                      Export
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Export Options</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={exportToCSV} className="cursor-pointer">
+                      <FileTextIcon className="mr-2 h-4 w-4" />
+                      Export as CSV
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={exportToExcel} className="cursor-pointer">
+                      <FileSpreadsheetIcon className="mr-2 h-4 w-4" />
+                      Export as Excel
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
 
-              {/* Add Data Button */}
-              <Button onClick={handleAddNew} className="mr-5 bg-white text-black cursor-pointer hover:bg-white border border-black border-r-4 border-b-4 hover:border">
-                <PlusIcon className="mr-2 h-4 w-4" />
-                Add Data
-              </Button>
+              {/* Add Data Button dengan pembungkus tetap */}
+              <div className="inline-block w-[120px]">
+                <Button
+                  onClick={handleAddNew}
+                  className="w-full mr-5 bg-white text-black cursor-pointer hover:bg-white border border-black border-r-4 border-b-4 hover:border transition-all duration-200"
+                >
+                  <PlusIcon className="mr-2 h-4 w-4" />
+                  Add Data
+                </Button>
+              </div>
             </div>
+
+
           </div>
 
           {/* Export Info */}
@@ -542,8 +552,8 @@ export const TableContent = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-white text-black cursor-pointer hover:bg-white border border-black border-r-4 border-b-4 hover:border">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-white text-black cursor-pointer hover:bg-white border border-red-600 border-r-4 border-b-4 hover:border">
+            <AlertDialogCancel className="bg-white text-black cursor-pointer hover:bg-white border border-black ">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-500 text-white cursor-pointer hover:bg-red-600 border border-red-500">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

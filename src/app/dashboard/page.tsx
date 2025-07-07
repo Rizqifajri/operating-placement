@@ -52,13 +52,13 @@ export default function Dashboard() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
-            <div className="flex items-center gap-4 text-xl text-gray-900">
+            {/* <div className="flex items-center gap-4 text-xl text-gray-900">
               <span>Overview</span>
               <span className="text-gray-600">•</span>
               <span>Analytics</span>
               <span className="text-gray-600">•</span>
               <span>Reports</span>
-            </div>
+            </div> */}
           </div>
         </div>
 
