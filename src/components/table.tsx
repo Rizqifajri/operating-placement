@@ -22,6 +22,7 @@ import {
   FileTextIcon,
   FileSpreadsheetIcon,
   Search,
+  ChevronDown,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -41,7 +42,6 @@ import * as XLSX from "xlsx"
 import { Input } from "./ui/input"
 import { CardDetailModal } from "./card-details"
 
-// Define the data structure
 interface TableDataItem {
   no: number
   source: string
@@ -83,22 +83,25 @@ export const TableContent = () => {
 
   const years = Array.from(new Set(displayData.map((item) => item.date?.slice(0, 4)))).sort()
   const quarters = Array.from(new Set(displayData.map((item) => item.quarter))).sort()
+  const status = Array.from(new Set(displayData.map((item) => item.status))).sort()
   const sources = Array.from(new Set(displayData.map((item) => item.source))).sort()
 
   const [selectedYear, setSelectedYear] = useState("__all__")
   const [selectedQuarter, setSelectedQuarter] = useState("__all__")
   const [selectedSource, setSelectedSource] = useState("__all__")
+  const [selectedStatus, setSelectedStatus] = useState("__all__")
 
   const filteredData = displayData.filter((item) => {
     const matchesYear = selectedYear === "__all__" || item.date?.startsWith(selectedYear)
     const matchesQuarter = selectedQuarter === "__all__" || item.quarter === selectedQuarter
     const matchesSource = selectedSource === "__all__" || item.source === selectedSource
+    const matchesStatus = selectedStatus === "__all__" || item.status === selectedStatus
 
     const matchesSearch = searchText === "" || Object.values(item).some((value) =>
       typeof value === "string" && value.toLowerCase().includes(searchText.toLowerCase())
     )
 
-    return matchesYear && matchesQuarter && matchesSource && matchesSearch
+    return matchesYear && matchesQuarter && matchesSource && matchesSearch && matchesStatus
   })
 
 
@@ -107,13 +110,13 @@ export const TableContent = () => {
   const [page, setPage] = useState(1)
   const currentData = filteredData.slice((page - 1) * itemsPerPage, page * itemsPerPage)
 
-  // Export functions
+  
   const generateFileName = (extension: string) => {
     const now = new Date()
-    const timestamp = now.toISOString().split("T")[0] // YYYY-MM-DD format
+    const timestamp = now.toISOString().split("T")[0] 
     let filterSuffix = ""
 
-    if (selectedYear !== "__all__" || selectedQuarter !== "__all__" || selectedSource !== "__all__") {
+    if (selectedYear !== "__all__" || selectedQuarter !== "__all__" || selectedSource !== "__all__" || selectedStatus !== "__all__") {
       const filters = []
       if (selectedYear !== "__all__") filters.push(selectedYear)
       if (selectedQuarter !== "__all__") filters.push(selectedQuarter)
@@ -192,7 +195,7 @@ export const TableContent = () => {
       })),
     )
 
-    // Set column widths
+
     const columnWidths = [
       { wch: 5 }, // No
       { wch: 10 }, // Source
@@ -231,12 +234,12 @@ export const TableContent = () => {
         content: formData.content,
         link: formData.link || "",
         status: formData.status,
-        date: editingItem.date, // Keep original date
+        date: editingItem.date, 
       }
 
       setData((prevData) => prevData.map((item) => (item.no === editingItem.no ? updatedEntry : item)))
     } else {
-      // Add new item
+      //add new
       const newEntry: TableDataItem = {
         no: Math.max(...data.map((item) => item.no), 0) + 1,
         source: formData.source,
@@ -249,7 +252,7 @@ export const TableContent = () => {
         content: formData.content,
         link: formData.link || "",
         status: formData.status,
-        date: new Date().toISOString().split("T")[0], // Current date in YYYY-MM-DD format
+        date: new Date().toISOString().split("T")[0], 
       }
 
       setData((prevData) => [newEntry, ...prevData])
@@ -306,6 +309,20 @@ export const TableContent = () => {
                   {years.map((year) => (
                     <SelectItem key={year} value={year}>
                       {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue placeholder="Filter Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__all__">Status</SelectItem>
+                  {status.map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {status}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -403,6 +420,7 @@ export const TableContent = () => {
                 {selectedYear !== "__all__" && ` • Year: ${selectedYear}`}
                 {selectedQuarter !== "__all__" && ` • Quarter: ${selectedQuarter}`}
                 {selectedSource !== "__all__" && ` • Source: ${selectedSource}`}
+                {selectedStatus !== "__all__" && ` • Status: ${selectedStatus}`}
               </p>
             </div>
           )}
@@ -465,7 +483,7 @@ export const TableContent = () => {
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger>
-                          <MoreHorizontalIcon className="h-4 w-4 text-gray-400 cursor-pointer" />
+                          <ChevronDown className="h-4 w-4 text-gray-400 cursor-pointer"/>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>

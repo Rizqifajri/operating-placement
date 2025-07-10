@@ -18,24 +18,22 @@ import {
 } from "@/components/ui/chart"
 import { tableData } from "@/lib/table.data"
 
-// 1. Hitung jumlah campaign per quarter
 const quarterCount = tableData.reduce((acc, row) => {
   const quarter = row.quarter
   acc[quarter] = (acc[quarter] || 0) + 1
   return acc
 }, {} as Record<string, number>)
 
-// 2. Ubah ke format array untuk chart
+
 const chartData = Object.entries(quarterCount).map(([quarter, count]) => ({
   quarter,
   campaigns: count,
 }))
 
-// 3. Konfigurasi warna
 const chartConfig = {
   campaigns: {
     label: "Campaigns",
-    color: "#3B82F6", // biru
+    color: "#3B82F6", 
   },
 } satisfies ChartConfig
 

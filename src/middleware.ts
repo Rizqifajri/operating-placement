@@ -8,12 +8,12 @@ export function middleware(request: NextRequest) {
   const isLoginPage = pathname === "/login"
   const isProtectedPage = pathname.startsWith("/dashboard") || pathname === "/"
 
-  // Belum login tapi akses halaman yang diproteksi
+
   if (!isLoggedIn && isProtectedPage) {
     return NextResponse.redirect(new URL("/login", request.url))
   }
 
-  // Sudah login tapi akses halaman login
+
   if (isLoggedIn && isLoginPage) {
     return NextResponse.redirect(new URL("/dashboard", request.url))
   }

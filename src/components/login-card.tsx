@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Loader2 } from "lucide-react" // spinner icon
+import Image from "next/image"
 
 export function CardLogin() {
   const router = useRouter()
@@ -24,7 +25,6 @@ export function CardLogin() {
     e.preventDefault()
     setIsLoading(true)
 
-    // Simulasi proses login async
     setTimeout(() => {
       if (email === "cretivoxcreative@gmail.com" && password === "cretivox") {
         localStorage.setItem("isLoggedIn", "true")
@@ -35,12 +35,13 @@ export function CardLogin() {
       }
 
       setIsLoading(false)
-    }, 1500) // delay animasi
+    }, 1500) //delay animate
   }
 
   return (
     <Card className="w-full max-w-sm bg-white text-black cursor-pointer hover:bg-white border border-black border-r-4 border-b-4">
-      <CardHeader>
+      <CardHeader className="relative">
+        <Image className="absolute -top-15 right-35" src="/eye.png" alt="cretivox" width={100} height={100} />
         <CardTitle className="text-xl md:text-3xl">Login to your account</CardTitle>
         <CardDescription>
           Enter your email below to login to your account

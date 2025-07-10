@@ -12,30 +12,30 @@ import {
 import { Card, CardTitle } from "./ui/card"
 import { tableData } from "@/lib/table.data"
 
-// Step 1: Hitung jumlah campaign per quarter
+
 const quarterCount = tableData.reduce((acc, row) => {
   const quarter = row.quarter || "Unknown"
   acc[quarter] = (acc[quarter] || 0) + 1
   return acc
 }, {} as Record<string, number>)
 
-// 2. Ubah ke array chart
+
 const chartData = Object.entries(quarterCount).map(([quarter, count]) => ({
   quarter,
   count,
 }))
 
-// 3. Urutkan Q1–Q4
+
 const quarterOrder = ["Q1", "Q2", "Q3", "Q4"]
 const sortedChartData = chartData.sort((a, b) => {
   return quarterOrder.indexOf(a.quarter) - quarterOrder.indexOf(b.quarter)
 })
 
-// 4. Konfigurasi chart
+
 const chartConfig = {
   count: {
     label: "Quarter",
-    color: "#c084fc", // Tailwind purple-400
+    color: "#c084fc", 
   },
 } satisfies ChartConfig
 
