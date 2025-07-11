@@ -1,7 +1,14 @@
 "use client"
 
+import {
+  useGetProjects,
+  useCreateProject,
+  useUpdateProject,
+  useDeleteProject,
+  mapProjectToTable,
+  Project
+} from "@/hooks/use-project"
 import { useState } from "react"
-import { tableData } from "@/lib/table.data"
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -12,9 +19,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-  MoreHorizontalIcon,
   PlusIcon,
   EditIcon,
   TrashIcon,
@@ -41,8 +47,10 @@ import AddDataForm from "./add-data-form"
 import * as XLSX from "xlsx"
 import { Input } from "./ui/input"
 import { CardDetailModal } from "./card-details"
+import { max } from "date-fns"
+import { formatDate } from "@/utils/format-date"
 
-interface TableDataItem {
+interface TableDataItem extends Project {
   no: number
   source: string
   division: string
@@ -71,37 +79,64 @@ const getStatusBadge = (status: string) => {
 }
 
 export const TableContent = () => {
-  const [data, setData] = useState<TableDataItem[]>(tableData)
+  const { data: rawData, isLoading } = useGetProjects()
+  const { mutate: createProject } = useCreateProject()
+  const { mutate: updateProject } = useUpdateProject()
+  const { mutate: deleteProject } = useDeleteProject()
+
+  //@ts-ignore
+  const data: TableDataItem[] = mapProjectToTable(rawData || [])
+
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<TableDataItem | null>(null)
   const [detailItem, setDetailItem] = useState<TableDataItem | null>(null)
   const [searchText, setSearchText] = useState("")
   const [deleteItem, setDeleteItem] = useState<TableDataItem | null>(null)
 
-  const maxData = 34
-  const displayData = data.slice(0, maxData)
+  const sortedData = [...data].sort((a, b) => {
+    const dateA = new Date(a.date)
+    const dateB = new Date(b.date)
+    return dateB.getTime() - dateA.getTime()
+  })
+
+
+  const displayData = sortedData.map((item, index) => ({
+    ...item,
+    no: index + 1,
+  }))
 
   const years = Array.from(new Set(displayData.map((item) => item.date?.slice(0, 4)))).sort()
   const quarters = Array.from(new Set(displayData.map((item) => item.quarter))).sort()
   const status = Array.from(new Set(displayData.map((item) => item.status))).sort()
-  const sources = Array.from(new Set(displayData.map((item) => item.source))).sort()
+  const monthNames = {
+    "01": "January", "02": "February", "03": "March", "04": "April",
+    "05": "May", "06": "June", "07": "July", "08": "August",
+    "09": "September", "10": "October", "11": "November", "12": "December"
+  }
+
+  const months = Array.from(
+    new Set(displayData.map((item) => item.date?.slice(5, 7)))
+  ).sort()
+
 
   const [selectedYear, setSelectedYear] = useState("__all__")
+  const [selectedMonth, setSelectedMonth] = useState("__all__")
   const [selectedQuarter, setSelectedQuarter] = useState("__all__")
-  const [selectedSource, setSelectedSource] = useState("__all__")
   const [selectedStatus, setSelectedStatus] = useState("__all__")
 
   const filteredData = displayData.filter((item) => {
     const matchesYear = selectedYear === "__all__" || item.date?.startsWith(selectedYear)
+    const matchesMonth =
+      selectedMonth === "__all__" ||
+      new Date(item.date).getMonth() + 1 === parseInt(selectedMonth)
     const matchesQuarter = selectedQuarter === "__all__" || item.quarter === selectedQuarter
-    const matchesSource = selectedSource === "__all__" || item.source === selectedSource
     const matchesStatus = selectedStatus === "__all__" || item.status === selectedStatus
-
-    const matchesSearch = searchText === "" || Object.values(item).some((value) =>
-      typeof value === "string" && value.toLowerCase().includes(searchText.toLowerCase())
-    )
-
-    return matchesYear && matchesQuarter && matchesSource && matchesSearch && matchesStatus
+    const matchesSearch =
+      searchText === "" ||
+      Object.values(item).some(
+        (value) => typeof value === "string" && value.toLowerCase().includes(searchText.toLowerCase())
+      )
+    return matchesYear && matchesQuarter && matchesMonth && matchesStatus && matchesSearch
   })
 
 
@@ -110,189 +145,110 @@ export const TableContent = () => {
   const [page, setPage] = useState(1)
   const currentData = filteredData.slice((page - 1) * itemsPerPage, page * itemsPerPage)
 
-  
-  const generateFileName = (extension: string) => {
-    const now = new Date()
-    const timestamp = now.toISOString().split("T")[0] 
-    let filterSuffix = ""
-
-    if (selectedYear !== "__all__" || selectedQuarter !== "__all__" || selectedSource !== "__all__" || selectedStatus !== "__all__") {
-      const filters = []
-      if (selectedYear !== "__all__") filters.push(selectedYear)
-      if (selectedQuarter !== "__all__") filters.push(selectedQuarter)
-      if (selectedSource !== "__all__") filters.push(selectedSource)
-      filterSuffix = `_${filters.join("_")}`
-    }
-
-    return `campaign_data${filterSuffix}_${timestamp}.${extension}`
-  }
-
-  const exportToCSV = () => {
-    const headers = [
-      "No",
-      "Source",
-      "Division",
-      "Brand",
-      "Category",
-      "Quarter",
-      "Platform",
-      "SOW",
-      "Content",
-      "Link",
-      "Status",
-      "Date",
-    ]
-
-    const csvContent = [
-      headers.join(","),
-      ...filteredData.map((row) =>
-        [
-          row.no,
-          `"${row.source}"`,
-          `"${row.division}"`,
-          `"${row.brand}"`,
-          `"${row.category}"`,
-          `"${row.quarter}"`,
-          `"${row.platform}"`,
-          `"${row.sow.replace(/"/g, '""')}"`, // Escape quotes in SOW
-          `"${row.content.replace(/"/g, '""')}"`, // Escape quotes in content
-          `"${row.link}"`,
-          `"${row.status}"`,
-          `"${row.date}"`,
-        ].join(","),
-      ),
-    ].join("\n")
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-    const link = document.createElement("a")
-
-    if (link.download !== undefined) {
-      const url = URL.createObjectURL(blob)
-      link.setAttribute("href", url)
-      link.setAttribute("download", generateFileName("csv"))
-      link.style.visibility = "hidden"
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-    }
-  }
-
-  const exportToExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(
-      filteredData.map((row) => ({
-        No: row.no,
-        Source: row.source,
-        Division: row.division,
-        Brand: row.brand,
-        Category: row.category,
-        Quarter: row.quarter,
-        Platform: row.platform,
-        SOW: row.sow,
-        Content: row.content,
-        Link: row.link,
-        Status: row.status,
-        Date: row.date,
-      })),
-    )
-
-
-    const columnWidths = [
-      { wch: 5 }, // No
-      { wch: 10 }, // Source
-      { wch: 12 }, // Division
-      { wch: 20 }, // Brand
-      { wch: 15 }, // Category
-      { wch: 8 }, // Quarter
-      { wch: 12 }, // Platform
-      { wch: 30 }, // SOW
-      { wch: 40 }, // Content
-      { wch: 30 }, // Link
-      { wch: 12 }, // Status
-      { wch: 12 }, // Date
-    ]
-    worksheet["!cols"] = columnWidths
-
-    const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Campaign Data")
-
-    XLSX.writeFile(workbook, generateFileName("xlsx"))
-  }
-
-  // Handle form submission for both add and edit
   const handleFormSubmit = async (formData: any) => {
-    if (editingItem) {
-      // Update existing item
-      const updatedEntry: TableDataItem = {
-        ...editingItem,
-        source: formData.source,
-        division: formData.division,
-        brand: formData.brand,
-        category: formData.category,
-        quarter: formData.quarter,
-        platform: formData.platform,
-        sow: formData.sow,
-        content: formData.content,
-        link: formData.link || "",
-        status: formData.status,
-        date: editingItem.date, 
-      }
+    const payload = {
+      Source: formData.source,
+      Division: formData.division,
+      Brand: formData.brand,
+      "Brand Category": formData.category,
+      Quarter: formData.quarter,
+      Platform: formData.platform,
+      Link: formData.link || "",
+      Status: formData.status,
+      Date: new Date().toISOString(),
+      Bundling: [
+        {
+          SOW: formData.sow,
+          Content: formData.content,
+        },
+      ],
+    }
 
-      setData((prevData) => prevData.map((item) => (item.no === editingItem.no ? updatedEntry : item)))
+    if (editingItem?.id) {
+      updateProject({ id: editingItem.id, data: payload })
     } else {
-      //add new
-      const newEntry: TableDataItem = {
-        no: Math.max(...data.map((item) => item.no), 0) + 1,
-        source: formData.source,
-        division: formData.division,
-        brand: formData.brand,
-        category: formData.category,
-        quarter: formData.quarter,
-        platform: formData.platform,
-        sow: formData.sow,
-        content: formData.content,
-        link: formData.link || "",
-        status: formData.status,
-        date: new Date().toISOString().split("T")[0], 
-      }
-
-      setData((prevData) => [newEntry, ...prevData])
-      setPage(1) // Reset to first page to show the new entry
+      createProject(payload)
     }
 
     handleCloseDialog()
   }
 
-  // Handle opening dialog for add
+  const handleDeleteConfirm = () => {
+    if (deleteItem?.id) {
+      deleteProject(deleteItem.id)
+      setDeleteItem(null)
+    }
+  }
+
   const handleAddNew = () => {
     setEditingItem(null)
     setIsDialogOpen(true)
   }
 
-  // Handle opening dialog for edit
   const handleEdit = (item: TableDataItem) => {
     setEditingItem(item)
     setIsDialogOpen(true)
   }
 
-  // Handle closing dialog
   const handleCloseDialog = () => {
     setIsDialogOpen(false)
     setEditingItem(null)
   }
 
-  // Handle delete confirmation
-  const handleDeleteConfirm = () => {
-    if (deleteItem) {
-      setData((prevData) => prevData.filter((item) => item.no !== deleteItem.no))
-      setDeleteItem(null)
-    }
+  const exportToExcel = () => {
+    const exportData = filteredData.map((item) => ({
+      No: item.no,
+      Source: item.source,
+      Division: item.division,
+      Brand: item.brand,
+      Category: item.category,
+      Quarter: item.quarter,
+      Platform: item.platform,
+      SOW: item.sow,
+      Content: item.content,
+      Link: item.link,
+      Status: item.status,
+      Date: item.date,
+    }))
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData)
+    const workbook = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Campaigns")
+    XLSX.writeFile(workbook, "campaign-data.xlsx")
   }
+
+  const exportToCSV = () => {
+    const exportData = filteredData.map((item) => ({
+      No: item.no,
+      Source: item.source,
+      Division: item.division,
+      Brand: item.brand,
+      Category: item.category,
+      Quarter: item.quarter,
+      Platform: item.platform,
+      SOW: item.sow,
+      Content: item.content,
+      Link: item.link,
+      Status: item.status,
+      Date: item.date,
+    }))
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData)
+    const csv = XLSX.utils.sheet_to_csv(worksheet)
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+    const link = document.createElement("a")
+    const url = URL.createObjectURL(blob)
+    link.setAttribute("href", url)
+    link.setAttribute("download", "campaign-data.csv")
+    link.click()
+  }
+
 
   return (
     <div className="lg:col-span-2">
       <Card className="bg-white w-full">
         <CardHeader>
-          <CardTitle>Campaign Overview</CardTitle>
+          <CardTitle>Placement Overview</CardTitle>
           {/* <CardDescription className="text-gray-900">
             Recent campaign activities and status ({data.length} total entries)
           </CardDescription> */}
@@ -313,20 +269,20 @@ export const TableContent = () => {
                   ))}
                 </SelectContent>
               </Select>
-
-              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                <SelectTrigger className="w-[120px]">
-                  <SelectValue placeholder="Filter Status" />
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Select Month" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__all__">Status</SelectItem>
-                  {status.map((status) => (
-                    <SelectItem key={status} value={status}>
-                      {status}
+                  <SelectItem value="__all__">All Months</SelectItem>
+                  {months.map((month) => (
+                    <SelectItem key={month} value={month}>
+                      {monthNames[month as keyof typeof monthNames]}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+
 
               <Select value={selectedQuarter} onValueChange={setSelectedQuarter}>
                 <SelectTrigger className="w-[120px]">
@@ -342,19 +298,20 @@ export const TableContent = () => {
                 </SelectContent>
               </Select>
 
-              <Select value={selectedSource} onValueChange={setSelectedSource}>
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Select Source" />
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                <SelectTrigger className="w-[120px]">
+                  <SelectValue placeholder="Filter Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__all__">All Sources</SelectItem>
-                  {sources.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {s}
+                  <SelectItem value="__all__">Status</SelectItem>
+                  {status.map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {status}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+
             </div>
 
             <div className="flex gap-2 justify-center items-center">
@@ -413,13 +370,13 @@ export const TableContent = () => {
           </div>
 
           {/* Export Info */}
-          {(selectedYear !== "__all__" || selectedQuarter !== "__all__" || selectedSource !== "__all__") && (
+          {(selectedYear !== "__all__" || selectedQuarter !== "__all__" || selectedMonth !== "__all__") && (
             <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-sm text-blue-800">
                 <strong>Export Info:</strong> Export will include {filteredData.length} filtered entries
                 {selectedYear !== "__all__" && ` • Year: ${selectedYear}`}
+                {selectedMonth !== "__all__" && ` • Month: ${selectedMonth}`}
                 {selectedQuarter !== "__all__" && ` • Quarter: ${selectedQuarter}`}
-                {selectedSource !== "__all__" && ` • Source: ${selectedSource}`}
                 {selectedStatus !== "__all__" && ` • Status: ${selectedStatus}`}
               </p>
             </div>
@@ -479,11 +436,11 @@ export const TableContent = () => {
                       )}
                     </TableCell>
                     <TableCell>{getStatusBadge(row.status)}</TableCell>
-                    <TableCell>{row.date}</TableCell>
+                    <TableCell>{formatDate(row.date)}</TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger>
-                          <ChevronDown className="h-4 w-4 text-gray-400 cursor-pointer"/>
+                          <ChevronDown className="h-4 w-4 text-gray-400 cursor-pointer" />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
